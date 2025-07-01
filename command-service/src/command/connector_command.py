@@ -186,8 +186,8 @@ class ConnectorCommand(ICommand):
 
             flink_jobs_json = json.dumps(flink_jobs)
             nodeSelector = self.config.find("node_selector")
-            security_contexts = self.config.find("container_security_context")
-            pod_security_context = self.config.find("pod_security_context")
+            security_contexts = self.config.find("flink_connector_container_security_context")
+            pod_security_context = self.config.find("flink_connector_pod_security_context")
             task_manager_limits = {
                 "cpu": len(instance_ids),
                 "memory": "{}Mi".format(len(instance_ids)*1024)
@@ -204,16 +204,11 @@ class ConnectorCommand(ICommand):
                 "--set", "namespace={}".format(namespace),
                 "--set", "connector_id={}".format(connector_instance.connector_id),
                 "--set", "flink_conf.taskmanager\\.numberOfTaskSlots={}".format(len(instance_ids)),
-                "--set-json",
-                f"""flink_jobs={flink_jobs_json.replace(" ", "")}""",
-                "--set-json",
-                f"""nodeSelector={json.dumps(nodeSelector)}""",
-                "--set-json",
-                f"""securityContext={json.dumps(security_contexts)}""",
-                "--set-json",
-                f"""podSecurityContext={json.dumps(pod_security_context)}""",
-                "--set-json",
-                f"""flink_resources.taskmanager.resources.limits={json.dumps(task_manager_limits)}"""
+                "--set-json", f"""flink_jobs={flink_jobs_json.replace(" ", "")}""",
+                "--set-json", f"""nodeSelector={json.dumps(nodeSelector)}""",
+                "--set-json", f"""securityContext={json.dumps(security_contexts)}""",
+                "--set-json", f"""podSecurityContext={json.dumps(pod_security_context)}""",
+                "--set-json", f"""flink_resources.taskmanager.resources.limits={json.dumps(task_manager_limits)}"""
             ]
 
             print("flink connector installation:  ", " ".join(helm_install_cmd))
@@ -268,8 +263,8 @@ class ConnectorCommand(ICommand):
 
         namespace = self.connector_job_config["spark"]["namespace"]
         nodeSelector = self.config.find("node_selector")
-        container_security_context = self.config.find("container_security_context")
-        pod_security_context = self.config.find("pod_security_context")
+        container_security_context = self.config.find("spark_connector_container_security_context")
+        pod_security_context = self.config.find("spark_connector_pod_security_context")
 
         helm_install_cmd = [
             "helm",
