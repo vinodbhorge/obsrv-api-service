@@ -9,6 +9,7 @@ import { PassThrough } from "stream";
 import { registerConnector } from "../../connections/commandServiceConnection";
 import { generatePreSignedUrl } from "../GenerateSignedURL/helper";
 import { obsrvError } from "../../types/ObsrvError";
+import { config } from "../../configs/Config";
 
 export const apiId = "api.connector.register";
 export const code = "FAILED_TO_REGISTER_CONNECTOR";
@@ -25,11 +26,11 @@ const connectorRegisterController = async (req: Request, res: Response) => {
         logger.info({ apiId, resmsgid, message: `File uploaded to cloud provider successfully` })
         const downloadUrls = await generatePreSignedUrl("read", [payload.relative_path], "connector")
         const urlPayload = {
-            download_url : _.get(downloadUrls, [0, "preSignedUrl"]),
+            download_url: _.get(downloadUrls, [0, "preSignedUrl"]),
             file_name: _.get(downloadUrls, [0, "fileName"])
         }
-        if(!urlPayload.download_url){            
-            throw obsrvError("", "SIGNED_URL_NOT_FOUND",`Failed to generate signed url for path ${payload.relative_path}`,  "BAD_REQUEST", 400)
+        if (!urlPayload.download_url) {
+            throw obsrvError("", "SIGNED_URL_NOT_FOUND", `Failed to generate signed url for path ${payload.relative_path}`, "BAD_REQUEST", 400)
         }
         const userToken = req.get('authorization') as string;
         const registryResponse = await registerConnector(urlPayload, userToken);
@@ -76,11 +77,18 @@ const uploadStream = async (req: Request) => {
                     const pass = new PassThrough();
                     file.pipe(pass);
                     const fileBuffer = await streamToBuffer(pass);
+
+                    const uploadHeaders: any = {
+                        "Content-Type": info.mimeType,
+                        "Content-Length": fileBuffer.length,
+                    };
+
+                    if (config.cloud_config.cloud_storage_provider === "azure") {
+                        uploadHeaders["x-ms-blob-type"] = config.cloud_config.azure_blob_type;
+                    }
+
                     await axios.put(preSignedUrl[0]?.preSignedUrl, fileBuffer, {
-                        headers: {
-                            "Content-Type": info.mimeType,
-                            "Content-Length": fileBuffer.length,
-                        }
+                        headers: uploadHeaders
                     });
                 }
                 catch (err) {

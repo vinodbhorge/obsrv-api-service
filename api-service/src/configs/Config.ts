@@ -14,7 +14,7 @@ const getCloudConfigs = () => {
     return parsedCloudConfig;
   }
   return {};
-} 
+}
 
 
 export const config = {
@@ -30,8 +30,8 @@ export const config = {
       "native_query_path": "/druid/v2",
       "list_datasources_path": "/druid/v2/datasources",
       "submit_ingestion": "druid/indexer/v1/supervisor",
-      "username": process.env.druid_username || "admin",  
-      "password": process.env.druid_password || "admin123" 
+      "username": process.env.druid_username || "admin",
+      "password": process.env.druid_password || "admin123"
     },
     "prometheus": {
       "url": process.env.prometheus_url || "http://localhost:9090"
@@ -102,6 +102,7 @@ export const config = {
     "maxQueryDateRange": process.env.exhaust_query_range ? parseInt(process.env.exhaust_query_range) : 31, // in days. Defines the maximum no. of days the files can be fetched
     "exclude_exhaust_types": process.env.exclude_exhaust_types ? process.env.exclude_exhaust_types.split(",") : ["system-stats", "masterdata-system-stats", "system-events",], // list of folder type names to skip exhaust service
     "telemetry_data_path": process.env.telemetry_data_path || "telemetry-data",
+    "azure_blob_type": process.env.azure_blob_type || "BlockBlob"
   },
   "template_config": {
     "template_required_variables": process.env.template_required_vars ? process.env.template_required_vars.split(",") : ["DATASET", "STARTDATE", "ENDDATE"],
@@ -149,5 +150,5 @@ export const config = {
   },
   "dataset_filter_config": {
     "status_filter_limit": process.env.status_filter_limit ? parseInt(process.env.status_filter_limit) : 10 // Maximum number of filters allowed in a dataset
-  } 
+  }
 }
