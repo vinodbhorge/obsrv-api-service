@@ -200,9 +200,11 @@ const checkSupervisorAvailability = async (datasourceRef: string) => {
     const { data } = await druidHttpService.get("/druid/coordinator/v1/loadstatus");
     const datasourceAvailability = _.get(data, datasourceRef)
     if (_.isUndefined(datasourceAvailability)) {
+        logger.error({ apiId, requestBody, msgid, dataset_id, message: `Segments not published to the metadata store yet, please check the coordinator load status`, code: errCode.notFound })
         throw obsrvError("", "DATASOURCE_NOT_AVAILABLE", "Datasource not available for querying", "NOT_FOUND", 404)
     }
     if (datasourceAvailability !== 100) {
+        logger.error({ apiId, requestBody, msgid, dataset_id, message: `Segments not fully published to the metadata store yet, please check the coordinator load status`, code: errCode.notFound })
         throw obsrvError("", "DATASOURCE_NOT_FULLY_AVAILABLE", "Datasource not fully available for querying", "RANGE_NOT_SATISFIABLE", 416)
     }
 }
@@ -218,7 +220,7 @@ const setDatasourceRef = async (datasetId: string, payload: any): Promise<any> =
 
     if (!_.includes(existingDatasources.data, datasourceRef)) {
         logger.error({ apiId, requestBody, msgid, dataset_id, message: `Dataset ${datasetId} with table ${granularity} is not available for querying`, code: errCode.notFound })
-        throw obsrvError("", errCode.notFound,  `Dataset ${datasetId} with table ${granularity} is not available for querying`, "NOT_FOUND", 404);
+        throw obsrvError("", errCode.notFound, `Dataset ${datasetId} with table ${granularity} is not available for querying`, "NOT_FOUND", 404);
     }
     if (_.isString(payload?.query)) {
         payload.query = payload.query.replace(datasetId, datasourceRef)
