@@ -28,14 +28,17 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Get build number
+        id: build-number
+        run: echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_OUTPUT
+
       - name: Build docker image and push
         uses: docker/build-push-action@v5
         with:
           file: ./api-service/Dockerfile
           push: true
           tags: |
-            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:api-service-${{ github.sha }}
-            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:api-service-latest
+            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:api-service-latest-${{ steps.build-number.outputs.BUILD_NUMBER }}
 
   build-command-service-image:
     runs-on: ubuntu-latest
@@ -52,13 +55,15 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Get build number
+        id: build-number
+        run: echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_OUTPUT
+
       - name: Build docker image and push
         uses: docker/build-push-action@v5
         with:
           context: ./command-service
-          platforms: linux/amd64
           push: true
           tags: |
-            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:command-service-${{ github.sha }}
-            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:command-service-latest
+            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:command-service-latest-${{ steps.build-number.outputs.BUILD_NUMBER }}
 
