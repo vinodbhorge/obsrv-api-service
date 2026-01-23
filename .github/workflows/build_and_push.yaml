@@ -34,7 +34,8 @@ jobs:
           file: ./api-service/Dockerfile
           push: true
           tags: |
-            522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:api-service-latest
+            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:api-service-${{ github.sha }}
+            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:api-service-latest
 
   build-command-service-image:
     runs-on: ubuntu-latest
@@ -58,5 +59,6 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:command-service-latest
+            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:command-service-${{ github.sha }}
+            522814700227.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:command-service-latest
 
