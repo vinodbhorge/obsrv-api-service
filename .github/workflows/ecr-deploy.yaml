@@ -1,0 +1,43 @@
+name: Build and Push to ECR
+run-name: ECR Deploy for ${{ github.ref }}
+
+on:
+  push:
+    branches:
+      - feature/obsrv-service
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push-api-service:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push API service image
+        env:
+          ECR_REPO: 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service
+          IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+        run: |
+          docker build -t $ECR_REPO:$IMAGE_TAG -f ./api-service/Dockerfile .
+          docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
+          docker push $ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REPO:latest
+
+
