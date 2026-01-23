@@ -31,8 +31,8 @@ jobs:
 
       - name: Build and push to ECR
         run: |
-          docker build -t 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:${{ github.ref_name }}-${{ github.sha }} -f ./api-service/Dockerfile .
-          docker tag 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:${{ github.ref_name }}-${{ github.sha }} 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:latest
-          docker push 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:${{ github.ref_name }}-${{ github.sha }}
+          docker build -t 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:${{ github.sha }} -f ./api-service/Dockerfile .
+          docker tag 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:${{ github.sha }} 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:latest
+          docker push 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:${{ github.sha }}
           docker push 522814700227.dkr.ecr.us-east-1.amazonaws.com/obsrv_services_lms_sb_obsrv_api_service:latest
 
