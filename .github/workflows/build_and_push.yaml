@@ -42,8 +42,7 @@ jobs:
       - name: Build docker image and push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./api-service/Dockerfile
+          context: ./api-service
           push: true
           tags: |
             061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
