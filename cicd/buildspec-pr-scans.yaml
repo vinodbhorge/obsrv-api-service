@@ -98,7 +98,7 @@ phases:
       #     bash /tmp/lms-cicd-scripts/utility/script/twistcli-scan.sh
       #   else
       #     echo "...........* SKIPPING TWISTCLI SCAN *.........."
-      #   fi
+      #   fi 
   post_build:
     commands:
       - bash /tmp/lms-cicd-scripts/utility/script/pr-scans-results-comment.sh
