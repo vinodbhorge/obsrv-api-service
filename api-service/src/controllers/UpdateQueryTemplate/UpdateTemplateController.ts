@@ -27,7 +27,8 @@ export const updateQueryTemplate = async (req: Request, res: Response) => {
     try {
         // Input validation to prevent SQL injection - defense in depth
         if (!validateTemplateId(templateId)) {
-            logger.error({ apiId, resmsgid: _.get(res, "resmsgid"), requestBody, templateId, message: "Invalid template ID format", code: "QUERY_TEMPLATE_INVALID_INPUT" })
+            // Log only identifiers, not the full request body to avoid exposing sensitive data
+            logger.error({ apiId, resmsgid: _.get(res, "resmsgid"), templateId, message: "Invalid template ID format", code: "QUERY_TEMPLATE_INVALID_INPUT" })
             return ResponseHandler.errorResponse({ message: "Invalid template ID format", statusCode: 400, errCode: "BAD_REQUEST", code: "QUERY_TEMPLATE_INVALID_INPUT" }, req, res);
         }
         

@@ -24,7 +24,9 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
     
     // Content-Security-Policy header
     // Helps prevent XSS and other injection attacks
-    // Note: This is a baseline policy. Adjust based on your application's specific needs
+    // Note: 'unsafe-inline' is enabled for compatibility with common frameworks that use inline styles.
+    // For production environments with strict security requirements, consider using CSP nonces or hashes
+    // and moving all inline scripts/styles to external files.
     res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:");
     
     // Referrer-Policy header
@@ -70,7 +72,8 @@ export const sanitizeFilters = (filters: any): { sanitized: any; rejected: strin
     const rejected: string[] = [];
     
     for (const key in filters) {
-        if (filters.hasOwnProperty(key)) {
+        // Use Object.prototype.hasOwnProperty for robust property checking
+        if (Object.prototype.hasOwnProperty.call(filters, key)) {
             // Only allow alphanumeric keys with underscores (valid column names)
             if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
                 sanitized[key] = filters[key];
