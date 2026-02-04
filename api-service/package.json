@@ -44,6 +44,7 @@
     "dateformat": "2.0.0",
     "dayjs": "^1.11.13",
     "express": "^5.0.0-beta.3",
+    "helmet": "^8.1.0",
     "http-errors": "^2.0.0",
     "http-status": "^1.5.3",
     "jsonwebtoken": "^9.0.1",

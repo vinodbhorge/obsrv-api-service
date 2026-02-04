@@ -1,40 +1,40 @@
 import { Request, Response, NextFunction } from "express";
-import { config } from "../configs/Config";
+import helmet from "helmet";
 
 /**
- * Security middleware to set HTTP security headers
- * Addresses Checkmarx findings for Missing HSTS Header
+ * Security middleware using helmet package
+ * Addresses Checkmarx findings for Missing HSTS Header and other security headers
+ * 
+ * Helmet helps secure Express apps by setting various HTTP headers:
+ * - Strict-Transport-Security (HSTS)
+ * - X-Content-Type-Options
+ * - X-Frame-Options
+ * - Content-Security-Policy
+ * - And more
  */
-export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
-    // Strict-Transport-Security (HSTS) header
-    // Instructs browsers to only access the site via HTTPS
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-    
-    // X-Content-Type-Options header
-    // Prevents MIME type sniffing
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    
-    // X-Frame-Options header
-    // Prevents clickjacking attacks
-    res.setHeader("X-Frame-Options", "DENY");
-    
-    // X-XSS-Protection header
-    // Enables XSS filtering in browsers
-    res.setHeader("X-XSS-Protection", "1; mode=block");
-    
-    // Content-Security-Policy header
-    // Helps prevent XSS and other injection attacks
+export const securityHeaders = helmet({
+    // HSTS configuration
+    hsts: {
+        maxAge: 31536000, // 1 year in seconds
+        includeSubDomains: true,
+    },
+    // Content Security Policy
     // Note: 'unsafe-inline' is enabled for compatibility with common frameworks that use inline styles.
     // For production environments with strict security requirements, consider using CSP nonces or hashes
-    // and moving all inline scripts/styles to external files.
-    res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:");
-    
-    // Referrer-Policy header
-    // Controls how much referrer information is included with requests
-    res.setHeader("Referrer-Policy", "no-referrer");
-    
-    next();
-};
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:"],
+            fontSrc: ["'self'", "data:"],
+        },
+    },
+    // Referrer Policy
+    referrerPolicy: {
+        policy: "no-referrer",
+    },
+});
 
 /**
  * Validates and sanitizes UUID parameters to prevent SQL injection
