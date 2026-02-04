@@ -6,8 +6,18 @@ import { ResponseHandler } from "../../helpers/ResponseHandler";
 import { publishNotificationChannel, testNotificationChannel, updateNotificationChannel } from "../../services/managers";
 import _ from "lodash";
 import { updateTelemetryAuditEvent } from "../../services/telemetry";
+import { sanitizeFilters } from "../../middlewares/security";
 
 const telemetryObject = { type: "notificationChannel", ver: "1.0.0" };
+
+/**
+ * Validates UUID format to prevent SQL injection
+ * Note: Sequelize uses parameterized queries, this is defense in depth
+ */
+const validateUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+};
 
 const createHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
@@ -27,7 +37,12 @@ const createHandler = async (request: Request, response: Response, next: NextFun
 const updateHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const { id } = request.params;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
         const updatedPayload = request.body;
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const notificationPayloadModel = await Notification.findOne({ where: { id } });
         const notificationPayload = notificationPayloadModel?.toJSON();
         if (!notificationPayload) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
@@ -48,7 +63,10 @@ const updateHandler = async (request: Request, response: Response, next: NextFun
 const listHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const { limit, filters, offset } = request.body?.request || {};
-        const notifications = await Notification.findAll({ limit: limit, offset: offset, ...(filters && { where: filters }) });
+        // Sanitize filters to prevent SQL injection through filter parameters
+        const sanitizedFilters = filters ? sanitizeFilters(filters) : undefined;
+        // Sequelize automatically parameterizes this query, safe from SQL injection
+        const notifications = await Notification.findAll({ limit: limit, offset: offset, ...(sanitizedFilters && { where: sanitizedFilters }) });
         const count = _.get(notifications, "length");
         ResponseHandler.successResponse(request, response, { status: httpStatus.OK, data: { notifications, ...(count && { count }) } });
     } catch (err) {
@@ -60,6 +78,11 @@ const listHandler = async (request: Request, response: Response, next: NextFunct
 const fetchHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const { id } = request.params;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const notificationPayloadModel = await Notification.findOne({ where: { id } });
         const notificationPayload = notificationPayloadModel?.toJSON();
         if (!notificationPayloadModel) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
@@ -74,6 +97,11 @@ const fetchHandler = async (request: Request, response: Response, next: NextFunc
 const retireHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const { id } = request.params;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const notificationPayloadModel = await Notification.findOne({ where: { id } })
         const notificationPayload = notificationPayloadModel?.toJSON();
         if (!notificationPayload) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
@@ -91,6 +119,11 @@ const retireHandler = async (request: Request, response: Response, next: NextFun
 const publishHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const { id } = request.params;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const notificationPayloadModel = await Notification.findOne({ where: { id } })
         const notificationPayload = notificationPayloadModel?.toJSON();
         if (!notificationPayload) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
@@ -111,6 +144,11 @@ const testNotifationChannelHandler = async (request: Request, response: Response
         const { message = "Hello Obsrv", payload = {} } = request.body;
         const { id } = payload;
         if (id) {
+            // Input validation to prevent SQL injection - defense in depth
+            if (!validateUUID(id)) {
+                return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+            }
+            // Sequelize automatically parameterizes this query, safe from SQL injection
             const notificationPayloadModel = await Notification.findOne({ where: { id } })
             const notificationPayload = notificationPayloadModel?.toJSON();
             if (!notificationPayload) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });

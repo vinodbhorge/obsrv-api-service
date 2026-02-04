@@ -11,10 +11,26 @@ import logger from "../../logger";
 const apiId = "api.query.template.update";
 const requiredVariables = _.get(config, "template_config.template_required_variables");
 
+/**
+ * Validates template ID format to prevent SQL injection
+ * Note: Sequelize uses parameterized queries, this is defense in depth
+ */
+const validateTemplateId = (id: string): boolean => {
+    // Template IDs should be alphanumeric with underscores and hyphens
+    const templateIdRegex = /^[a-zA-Z0-9_-]+$/;
+    return templateIdRegex.test(id) && id.length <= 255;
+};
+
 export const updateQueryTemplate = async (req: Request, res: Response) => {
     const requestBody = req.body;
     const templateId = _.get(req, "params.templateId");
     try {
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateTemplateId(templateId)) {
+            logger.error({ apiId, resmsgid: _.get(res, "resmsgid"), requestBody, templateId, message: "Invalid template ID format", code: "QUERY_TEMPLATE_INVALID_INPUT" })
+            return ResponseHandler.errorResponse({ message: "Invalid template ID format", statusCode: 400, errCode: "BAD_REQUEST", code: "QUERY_TEMPLATE_INVALID_INPUT" }, req, res);
+        }
+        
         const msgid = _.get(req, "body.params.msgid");
         const resmsgid = _.get(res, "resmsgid");
         const isValidSchema = schemaValidation(requestBody, validationSchema);
@@ -40,6 +56,7 @@ export const updateQueryTemplate = async (req: Request, res: Response) => {
         }
         const userID = (req as any)?.userID;
         requestBody.request.updated_by = userID;
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         await QueryTemplate.update(requestBody?.request, { where: { template_id: templateId } })
         logger.info({ apiId, msgid, resmsgid, templateId, requestBody, message: `Query template updated successfully` })
         ResponseHandler.successResponse(req, res, { status: 200, data: { message: "Query template updated successfully", templateId } });

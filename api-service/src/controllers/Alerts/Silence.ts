@@ -9,10 +9,24 @@ import { updateTelemetryAuditEvent } from "../../services/telemetry";
 
 const telemetryObject = { type: "alert-silence", ver: "1.0.0" };
 
+/**
+ * Validates UUID format to prevent SQL injection
+ * Note: Sequelize uses parameterized queries, this is defense in depth
+ */
+const validateUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+};
+
 const createHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const payload = request.body;
         const { startDate, endDate, alertId } = payload;
+        // Input validation to prevent SQL injection - defense in depth
+        if (alertId && !validateUUID(alertId)) {
+            return next({ message: "Invalid alert ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const existingSilence = await Silence.findOne({ where: { alert_id: alertId } });
         if (existingSilence) existingSilence.destroy();
         const grafanaResponse = await createSilence(payload);
@@ -60,6 +74,11 @@ const listHandler = async (request: Request, response: Response, next: NextFunct
 const fetchHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const id = request.params.id;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const silenceModel = await Silence.findOne({ where: { id } });
         const transformedSilence = await transformSilences(silenceModel);
         if (!silenceModel) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
@@ -73,7 +92,12 @@ const fetchHandler = async (request: Request, response: Response, next: NextFunc
 const updateHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const id = request.params.id;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
         const payload = request.body;
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const silenceModel = await Silence.findOne({ where: { id } });
         if (!silenceModel) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
         const silenceObject = silenceModel?.toJSON();
@@ -99,6 +123,11 @@ const updateHandler = async (request: Request, response: Response, next: NextFun
 const deleteHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const id = request.params.id;
+        // Input validation to prevent SQL injection - defense in depth
+        if (!validateUUID(id)) {
+            return next({ message: "Invalid ID format", statusCode: httpStatus.BAD_REQUEST });
+        }
+        // Sequelize automatically parameterizes this query, safe from SQL injection
         const silenceModel = await Silence.findOne({ where: { id } });
         if (!silenceModel) return next({ message: httpStatus[httpStatus.NOT_FOUND], statusCode: httpStatus.NOT_FOUND });
         const silenceObject = silenceModel?.toJSON();
