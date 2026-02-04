@@ -64,7 +64,10 @@ const listHandler = async (request: Request, response: Response, next: NextFunct
     try {
         const { limit, filters, offset } = request.body?.request || {};
         // Sanitize filters to prevent SQL injection through filter parameters
-        const sanitizedFilters = filters ? sanitizeFilters(filters) : undefined;
+        const { sanitized: sanitizedFilters, rejected } = filters ? sanitizeFilters(filters) : { sanitized: undefined, rejected: [] };
+        if (rejected.length > 0) {
+            return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
+        }
         // Sequelize automatically parameterizes this query, safe from SQL injection
         const notifications = await Notification.findAll({ limit: limit, offset: offset, ...(sanitizedFilters && { where: sanitizedFilters }) });
         const count = _.get(notifications, "length");

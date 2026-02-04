@@ -39,30 +39,35 @@ export const updateQueryTemplate = async (req: Request, res: Response) => {
             if (_.includes(isValidSchema.message, "template_name")) {
                 _.set(isValidSchema, "message", "Template name should contain alphanumeric characters and single space between characters")
             }
-            logger.error({ apiId, msgid, resmsgid, templateId, requestBody, message: isValidSchema?.message, code: "QUERY_TEMPLATE_INVALID_INPUT" })
+            // Log only identifiers, not the full request body to avoid exposing sensitive data
+            logger.error({ apiId, msgid, resmsgid, templateId, message: isValidSchema?.message, code: "QUERY_TEMPLATE_INVALID_INPUT" })
             return ResponseHandler.errorResponse({ message: isValidSchema?.message, statusCode: 400, errCode: "BAD_REQUEST", code: "QUERY_TEMPLATE_INVALID_INPUT" }, req, res);
         }
 
         const isTemplateExists = await getQueryTemplate(templateId)
         if (isTemplateExists === null) {
-            logger.error({ apiId, resmsgid, requestBody, templateId, message: `Template ${templateId} does not exists`, code: "QUERY_TEMPLATE_NOT_EXISTS" })
+            // Log only identifiers, not the full request body to avoid exposing sensitive data
+            logger.error({ apiId, resmsgid, templateId, message: `Template ${templateId} does not exists`, code: "QUERY_TEMPLATE_NOT_EXISTS" })
             return ResponseHandler.errorResponse({ message: `Template ${templateId} does not exists`, statusCode: 404, errCode: "NOT_FOUND", code: "QUERY_TEMPLATE_NOT_EXISTS" }, req, res);
         }
 
         const { validTemplate } = await validateTemplate(requestBody);
         if (!validTemplate) {
-            logger.error({ apiId, msgid, resmsgid, templateId, requestBody: req?.body, message: `Invalid template provided, A template should consist of variables ${requiredVariables} and type of json,sql`, code: "QUERY_TEMPLATE_INVALID_INPUT" })
+            // Log only identifiers, not the full request body to avoid exposing sensitive data
+            logger.error({ apiId, msgid, resmsgid, templateId, message: `Invalid template provided, A template should consist of variables ${requiredVariables} and type of json,sql`, code: "QUERY_TEMPLATE_INVALID_INPUT" })
             return ResponseHandler.errorResponse({ statusCode: 400, message: `Invalid template provided, A template should consist of variables ${requiredVariables} and type of json,sql`, errCode: "BAD_REQUEST", code: "QUERY_TEMPLATE_INVALID_INPUT" }, req, res)
         }
         const userID = (req as any)?.userID;
         requestBody.request.updated_by = userID;
         // Sequelize automatically parameterizes this query, safe from SQL injection
         await QueryTemplate.update(requestBody?.request, { where: { template_id: templateId } })
-        logger.info({ apiId, msgid, resmsgid, templateId, requestBody, message: `Query template updated successfully` })
+        // Log only identifiers, not the full request body to avoid exposing sensitive data
+        logger.info({ apiId, msgid, resmsgid, templateId, message: `Query template updated successfully` })
         ResponseHandler.successResponse(req, res, { status: 200, data: { message: "Query template updated successfully", templateId } });
     }
     catch (error) {
-        logger.error({ error, apiId, templateId, resmsgid: _.get(res, "resmsgid"), requestBody, code: "QUERY_TEMPLATE_UPDATE_FAILED", message: "Failed to update query template" })
+        // Log only identifiers, not the full request body to avoid exposing sensitive data
+        logger.error({ error, apiId, templateId, resmsgid: _.get(res, "resmsgid"), code: "QUERY_TEMPLATE_UPDATE_FAILED", message: "Failed to update query template" })
         ResponseHandler.errorResponse({ code: "QUERY_TEMPLATE_UPDATE_FAILED", message: "Failed to update query template" }, req, res);
     }
 }

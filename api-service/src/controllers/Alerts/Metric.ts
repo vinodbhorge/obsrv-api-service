@@ -37,7 +37,10 @@ const listMetricsHandler = async (req: Request, res: Response, next: NextFunctio
     try {
         const { limit, filters, offset } = _.get(req.body, "request") || {};
         // Sanitize filters to prevent SQL injection through filter parameters
-        const sanitizedFilters = filters ? sanitizeFilters(filters) : undefined;
+        const { sanitized: sanitizedFilters, rejected } = filters ? sanitizeFilters(filters) : { sanitized: undefined, rejected: [] };
+        if (rejected.length > 0) {
+            return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
+        }
         // Sequelize automatically parameterizes this query, safe from SQL injection
         const metricsPayload = await Metrics.findAll({ limit: limit, offset: offset, ...(sanitizedFilters && { where: sanitizedFilters }) });
         ResponseHandler.successResponse(req, res, { status: httpStatus.OK, data: { metrics: metricsPayload, count: metricsPayload.length } });
@@ -98,7 +101,10 @@ const deleteMultipleMetricHandler = async (req: Request, res: Response, next: Ne
         const { filters } = req.body;
         if (!filters) throw new Error("Failed to update record");
         // Sanitize filters to prevent SQL injection through filter parameters
-        const sanitizedFilters = sanitizeFilters(filters);
+        const { sanitized: sanitizedFilters, rejected } = sanitizeFilters(filters);
+        if (rejected.length > 0) {
+            return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
+        }
         // Sequelize automatically parameterizes this query, safe from SQL injection
         await Metrics.destroy({ where: sanitizedFilters });
         ResponseHandler.successResponse(req, res, { status: httpStatus.OK, data: {} });

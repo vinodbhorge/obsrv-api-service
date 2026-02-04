@@ -24,7 +24,8 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
     
     // Content-Security-Policy header
     // Helps prevent XSS and other injection attacks
-    res.setHeader("Content-Security-Policy", "default-src 'self'");
+    // Note: This is a baseline policy. Adjust based on your application's specific needs
+    res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:");
     
     // Referrer-Policy header
     // Controls how much referrer information is included with requests
@@ -57,23 +58,27 @@ export const validateUUIDParam = (paramName: string) => {
 /**
  * Sanitizes filter objects to prevent SQL injection through filter parameters
  * Validates that filter keys are safe and values are properly typed
+ * @returns Object with sanitized filters and array of rejected keys
  */
-export const sanitizeFilters = (filters: any): any => {
+export const sanitizeFilters = (filters: any): { sanitized: any; rejected: string[] } => {
     if (!filters || typeof filters !== "object") {
-        return filters;
+        return { sanitized: filters, rejected: [] };
     }
     
     // Create a sanitized copy
     const sanitized: any = {};
+    const rejected: string[] = [];
     
     for (const key in filters) {
         if (filters.hasOwnProperty(key)) {
             // Only allow alphanumeric keys with underscores (valid column names)
             if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
                 sanitized[key] = filters[key];
+            } else {
+                rejected.push(key);
             }
         }
     }
     
-    return sanitized;
+    return { sanitized, rejected };
 };

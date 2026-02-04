@@ -69,7 +69,10 @@ const searchAlertHandler = async (req: Request, res: Response, next: NextFunctio
   try {
     const { limit, filters, offset, options = {} } = req.body?.request || {};
     // Sanitize filters to prevent SQL injection through filter parameters
-    const sanitizedFilters = filters ? sanitizeFilters(filters) : undefined;
+    const { sanitized: sanitizedFilters, rejected } = filters ? sanitizeFilters(filters) : { sanitized: undefined, rejected: [] };
+    if (rejected.length > 0) {
+      return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
+    }
     // Sequelize automatically parameterizes this query, safe from SQL injection
     const alerts = await Alert.findAll({ limit: limit, offset: offset, ...(sanitizedFilters && { where: sanitizedFilters }), ...options });
     const alertRulesWithStatus = await Promise.all(_.map(alerts, transformAlerts));
@@ -154,7 +157,10 @@ const deleteSystemAlertsHandler = async (req: Request, res: Response, next: Next
     const { filters } = body;
     if (!filters) throw new Error("Failed to update record");
     // Sanitize filters to prevent SQL injection through filter parameters
-    const sanitizedFilters = sanitizeFilters(filters);
+    const { sanitized: sanitizedFilters, rejected } = sanitizeFilters(filters);
+    if (rejected.length > 0) {
+      return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
+    }
     await deleteSystemRules({ filters: sanitizedFilters, manager: "grafana" });
     // Sequelize automatically parameterizes this query, safe from SQL injection
     await Alert.destroy({ where: sanitizedFilters });
