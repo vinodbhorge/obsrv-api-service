@@ -5,20 +5,10 @@ import httpStatus from "http-status";
 import errorResponse from "http-errors";
 import { deleteAlertRule, getAlertPayload, getAlertRule, getAlertsMetadata, publishAlert, retireAlertSilence, deleteSystemRules } from "../../services/managers";
 import _ from "lodash";
-import { sanitizeFilters } from "../../middlewares/security";
 
 import { updateTelemetryAuditEvent } from "../../services/telemetry";
 
 const telemetryObject = { type: "alert", ver: "1.0.0" };
-
-/**
- * Validates UUID format to prevent SQL injection
- * Note: Sequelize uses parameterized queries, this is defense in depth
- */
-const validateUUID = (id: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
-};
 
 const createAlertHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -68,13 +58,7 @@ const transformAlerts = async (alertModel: any) => {
 const searchAlertHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { limit, filters, offset, options = {} } = req.body?.request || {};
-    // Sanitize filters to prevent SQL injection through filter parameters
-    const { sanitized: sanitizedFilters, rejected } = filters ? sanitizeFilters(filters) : { sanitized: undefined, rejected: [] };
-    if (rejected.length > 0) {
-      return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
-    }
-    // Sequelize automatically parameterizes this query, safe from SQL injection
-    const alerts = await Alert.findAll({ limit: limit, offset: offset, ...(sanitizedFilters && { where: sanitizedFilters }), ...options });
+    const alerts = await Alert.findAll({ limit: limit, offset: offset, ...(filters && { where: filters }), ...options });
     const alertRulesWithStatus = await Promise.all(_.map(alerts, transformAlerts));
     ResponseHandler.successResponse(req, res, { status: httpStatus.OK, data: { alerts: alertRulesWithStatus, count: alerts.length } });
   } catch (error) {
@@ -122,10 +106,6 @@ const deleteAlertHandler = async (req: Request, res: Response, next: NextFunctio
 const updateAlertHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { alertId } = req.params;
-    // Input validation to prevent SQL injection - defense in depth
-    if (!validateUUID(alertId)) {
-      return next({ message: "Invalid alert ID format", statusCode: httpStatus.BAD_REQUEST });
-    }
     const isEmpty = _.isEmpty(req.body);
     if (isEmpty) throw new Error("Failed to update record");
     const ruleModel = await getAlertRule(alertId);
@@ -138,7 +118,6 @@ const updateAlertHandler = async (req: Request, res: Response, next: NextFunctio
       await retireAlertSilence(alertId);
     }
     const updatedPayload = getAlertPayload({ ...req.body, manager: rulePayload?.manager });
-    // Sequelize automatically parameterizes this query, safe from SQL injection
     await Alert.update({ ...updatedPayload, status: "draft", updated_by: userID }, { where: { id: alertId } });
     updateTelemetryAuditEvent({ request: req, currentRecord: rulePayload, object: { id: alertId, ...telemetryObject } });
     ResponseHandler.successResponse(req, res, { status: httpStatus.OK, data: { id: alertId } });
@@ -156,14 +135,8 @@ const deleteSystemAlertsHandler = async (req: Request, res: Response, next: Next
     const body = req.body;
     const { filters } = body;
     if (!filters) throw new Error("Failed to update record");
-    // Sanitize filters to prevent SQL injection through filter parameters
-    const { sanitized: sanitizedFilters, rejected } = sanitizeFilters(filters);
-    if (rejected.length > 0) {
-      return next({ message: `Invalid filter keys: ${rejected.join(', ')}`, statusCode: httpStatus.BAD_REQUEST });
-    }
-    await deleteSystemRules({ filters: sanitizedFilters, manager: "grafana" });
-    // Sequelize automatically parameterizes this query, safe from SQL injection
-    await Alert.destroy({ where: sanitizedFilters });
+    await deleteSystemRules({ filters, manager: "grafana" });
+    await Alert.destroy({ where: filters });
     ResponseHandler.successResponse(req, res, { status: httpStatus.OK, data: {} });
   } catch (error) {
     next(errorResponse((httpStatus.INTERNAL_SERVER_ERROR, (<Error>error).message)));

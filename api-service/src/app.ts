@@ -7,7 +7,6 @@ import bodyParser from "body-parser";
 import { config } from "./configs/Config";
 import { ResponseHandler } from "./helpers/ResponseHandler";
 import { errorHandler, obsrvErrorHandler } from "./middlewares/errors";
-import { securityHeaders } from "./middlewares/security";
 import { OTelService } from "./services/otel/OTelService";
 import { alertsRouter } from "./routes/AlertsRouter";
 import { interceptAuditEvents, interceptLogEvents } from "./services/telemetry";
@@ -18,9 +17,6 @@ import _ from "lodash";
 const app: Application = express();
 // Initialisation of Open telemetry Service.
 (config.otel && _.toLower(config?.otel?.enable) === "true") ? OTelService.init() : console.info("OpenTelemetry Service is Disabled"); 
-
-// Security headers middleware - Addresses Checkmarx: Missing HSTS Header
-app.use(securityHeaders);
 
 app.use(bodyParser.json({ limit: config.body_parser_limit}));
 app.use(express.text());
