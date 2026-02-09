@@ -1,15 +1,18 @@
 import { Sequelize } from "sequelize";
 import { connectionConfig } from "../configs/ConnectionsConfig"
 
-const { database, host, port } = connectionConfig.postgres
+const { database, host, port } = connectionConfig.postgres;
+const credentials = connectionConfig.postgres.credentials.split("::");
+
+const decodedCredentials = Buffer.from(credentials[1], 'base64').toString('utf-8');
 
 export const sequelize = new Sequelize({
     database,
-    password: process.env.DB_PASSWORD,
-    username: process.env.DB_USERNAME,
-    dialect: "postgres",
+    username: credentials[0],
+    password: decodedCredentials,
     host,
     port: +port,
+    dialect: "postgres",
     pool: {
         max: 2,
         min: 1,
