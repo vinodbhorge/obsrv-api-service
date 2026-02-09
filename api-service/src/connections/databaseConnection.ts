@@ -6,20 +6,22 @@ const credentials = connectionConfig.postgres.credentials.split("::");
 
 const decodedCredentials = Buffer.from(credentials[1], 'base64').toString('utf-8');
 
-export const sequelize = new Sequelize({
+export const sequelize = new Sequelize(
     database,
-    username: credentials[0],
-    password: decodedCredentials,
-    host,
-    port: +port,
-    dialect: "postgres",
-    pool: {
-        max: 2,
-        min: 1,
-        acquire: 30000,
-        idle: 10000
+    credentials[0],
+    decodedCredentials,
+    {
+        host,
+        port: +port,
+        dialect: "postgres",
+        pool: {
+            max: 2,
+            min: 1,
+            acquire: 30000,
+            idle: 10000
+        }
     }
-})
+)
 
  export const health = async () => {
     return sequelize.query("select 1")
