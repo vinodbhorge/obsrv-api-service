@@ -12,6 +12,7 @@ const ResponseHandler = {
     const { body, entity } = req as any;
     const msgid = _.get(body, ["params", "msgid"])
     const resmsgid = _.get(res, "resmsgid")
+    res.setHeader('STRICT-TRANSPORT-SECURITY', 'max-age=31536000; includeSubDomains');
     res.status(result.status || 200).json(ResponseHandler.refactorResponse({ id: (req as any).id, result: result.data, msgid, resmsgid }));
     entity && onSuccess(req, res)
   },
