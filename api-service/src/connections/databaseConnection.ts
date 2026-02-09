@@ -4,6 +4,10 @@ import { connectionConfig } from "../configs/ConnectionsConfig"
 const { database, host, port, username } = connectionConfig.postgres
 const pwd = connectionConfig.postgres.password
 
+if (!pwd) {
+    throw new Error("Missing postgres_password environment variable for database connection")
+}
+
 export const sequelize = new Sequelize({
     database, password: pwd, username: username, dialect: "postgres", host, port: +port, pool: {
         max: 2,
