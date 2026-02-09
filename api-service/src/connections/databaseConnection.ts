@@ -1,18 +1,11 @@
 import { Sequelize } from "sequelize";
 import { connectionConfig } from "../configs/ConnectionsConfig"
 
-const { database, host, port, username } = connectionConfig.postgres
-
-const getPassword = () => {
-    const password = connectionConfig.postgres['password']
-    if (!password) {
-        throw new Error("Postgres password is not set in environment variables")
-    }
-    return password;
-}
+const { database, host, port } = connectionConfig.postgres
+const [username, password] = connectionConfig.postgres.credentials.split("::")
 
 export const sequelize = new Sequelize({
-    database, password: getPassword(), username: username, dialect: "postgres", host, port: +port, pool: {
+    database, password, username, dialect: "postgres", host, port: +port, pool: {
         max: 2,
         min: 1,
         acquire: 30000,
