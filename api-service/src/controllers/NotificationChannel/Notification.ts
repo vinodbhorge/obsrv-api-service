@@ -11,10 +11,11 @@ const telemetryObject = { type: "notificationChannel", ver: "1.0.0" };
 
 const createHandler = async (request: Request, response: Response, next: NextFunction) => {
     try {
+        const body = _.get(request, "body");
         const userID = (request as any)?.userID;
-        _.set(request.body, "created_by", userID);
-        _.set(request.body, "updated_by", userID);
-        const notificationBody = await Notification.create(_.get(request, "body"));
+        _.set(body, "created_by", userID);
+        _.set(body, "updated_by", userID);
+        const notificationBody = await Notification.create(body);
         updateTelemetryAuditEvent({ request, object: { id: notificationBody?.dataValues?.id, ...telemetryObject } });
         ResponseHandler.successResponse(request, response, { status: httpStatus.OK, data: { id: notificationBody.dataValues.id } })
     } catch (err) {
