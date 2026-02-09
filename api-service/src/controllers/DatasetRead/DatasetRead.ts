@@ -17,9 +17,24 @@ export const errorCode = "DATASET_READ_FAILURE"
 // TODO: Move this to a config
 export const defaultFields = ["dataset_id", "name", "type", "status", "tags", "version", "api_version", "dataset_config"]
 
+/**
+ * Validates dataset ID format to prevent SQL injection
+ * Note: Sequelize uses parameterized queries, this is defense in depth
+ */
+const validateDatasetId = (id: string): boolean => {
+    // Dataset IDs should be alphanumeric with underscores, hyphens, and dots
+    const datasetIdRegex = /^[a-zA-Z0-9._-]+$/;
+    return datasetIdRegex.test(id) && id.length <= 255;
+};
+
 const validateRequest = (req: Request) => {
 
     const { dataset_id } = req.params;
+    // Input validation to prevent SQL injection - defense in depth
+    if (!validateDatasetId(dataset_id)) {
+        throw obsrvError(dataset_id, "DATASET_INVALID_ID", "Invalid dataset ID format", "BAD_REQUEST", 400);
+    }
+    
     const { fields, mode } = req.query;
     const fieldValues = fields ? _.split(fields as string, ",") : [];
     const invalidFields = mode === "edit" ? _.difference(fieldValues, Object.keys(DatasetDraft.getAttributes())) : _.difference(fieldValues, Object.keys(Dataset.getAttributes()));
@@ -36,6 +51,7 @@ const datasetRead = async (req: Request, res: Response) => {
     const { fields, mode } = req.query;
     const userID = (req as any)?.userID;
     const attributes = !fields ? defaultFields : _.split(<string>fields, ",");
+    // Sequelize automatically parameterizes this query, safe from SQL injection
     const dataset = (mode == "edit") ? await readDraftDataset(dataset_id, attributes, userID) : await readDataset(dataset_id, attributes)
     if (!dataset) {
         throw obsrvError(dataset_id, "DATASET_NOT_FOUND", `Dataset with the given dataset_id:${dataset_id} not found`, "NOT_FOUND", 404);
