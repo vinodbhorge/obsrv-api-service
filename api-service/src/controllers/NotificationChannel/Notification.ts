@@ -14,7 +14,7 @@ const createHandler = async (request: Request, response: Response, next: NextFun
         const userID = (request as any)?.userID;
         _.set(request.body, "created_by", userID);
         _.set(request.body, "updated_by", userID);
-        const notificationBody = await Notification.create(request.body);
+        const notificationBody = await Notification.create(_.get(request, "body"));
         updateTelemetryAuditEvent({ request, object: { id: notificationBody?.dataValues?.id, ...telemetryObject } });
         ResponseHandler.successResponse(request, response, { status: httpStatus.OK, data: { id: notificationBody.dataValues.id } })
     } catch (err) {
