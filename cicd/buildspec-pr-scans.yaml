@@ -130,6 +130,7 @@ phases:
       - cd ..
       # - cd command-service && pip install -r requirements.txt
       # - cd ..
+      
       - echo "No gradle build. Skipping unit tests."
       - PR_NUMBER=$(echo $CODEBUILD_SOURCE_VERSION | sed 's/pr\///')
       - |
