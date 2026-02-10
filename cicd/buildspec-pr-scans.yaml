@@ -127,7 +127,9 @@ phases:
   pre_build:
     commands:
       - cd api-service &&  npm install
-      - cd ../
+      - cd ..
+      - cd command-service && npm install
+      - cd ..
       - echo "No gradle build. Skipping unit tests."
       - PR_NUMBER=$(echo $CODEBUILD_SOURCE_VERSION | sed 's/pr\///')
       - |
