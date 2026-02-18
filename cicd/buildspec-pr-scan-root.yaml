@@ -79,3 +79,4 @@ phases:
           echo "Prisma scan failed: Critical or High vulnerabilities found."
           exit 1
         fi
+        
