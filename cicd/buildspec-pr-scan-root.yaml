@@ -39,7 +39,7 @@ phases:
       - REPO_NAME=$(basename "$FullRepository_name")"-system-rules-ingestor"
       - export REPO_NAME
       - export SONAR_PROJECT="$REPO_NAME"
-      # GitHub App authentication using Python
+      # GitHub App authentication using Python 
       - echo "$PRIVATE_KEY_BASE64" | base64 -d > /tmp/gh_key.pem
       - pip install pyjwt cryptography requests
       - |
