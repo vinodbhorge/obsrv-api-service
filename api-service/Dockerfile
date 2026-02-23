@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:24.3.0-alpine
+FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.3.0-alpine
 RUN mkdir -p /opt/api-service
 COPY ./api-service  ./opt/api-service
 WORKDIR /opt/api-service
