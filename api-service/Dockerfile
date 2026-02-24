@@ -1,23 +1,42 @@
-FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.13.1-slim
+# Build stage
+FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.13.1-slim AS builder
 RUN npm install -g npm@11.10.0 \
  && npm pack tar@7.5.8 \
  && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
  && rm tar-7.5.8.tgz \
- && npm pack minimatch@10.2.1 \
- && npm cache clean --force \
- && cp -r /usr/local/lib/node_modules/npm/node_modules/minimatch/node_modules /tmp/minimatch_nm 2>/dev/null || true \
- && tar -xzf minimatch-10.2.1.tgz -C /usr/local/lib/node_modules/npm/node_modules/minimatch --strip-components=1 \
- && cp -r /tmp/minimatch_nm /usr/local/lib/node_modules/npm/node_modules/minimatch/node_modules 2>/dev/null || true \
- && rm -rf /tmp/minimatch_nm minimatch-10.2.1.tgz
+ && npm install -g minimatch@10.2.1 \
+ && npm cache clean --force
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
  && apt-get upgrade -y \
  && rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /opt/api-service
-COPY ./api-service  ./opt/api-service
 WORKDIR /opt/api-service
-RUN rm -rf postman-collection
-RUN npm install
-COPY . .
+# Install all dependencies for building
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts && npm cache clean --force
+# Copy source code and build
+COPY tsconfig.json ./
+COPY src/ ./src/
+COPY @types/ ./@types/
+RUN npm run build
+
+# Production stage
+FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.13.1-slim AS production
+RUN npm install -g npm@11.10.0 \
+ && npm pack tar@7.5.8 \
+ && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
+ && rm tar-7.5.8.tgz \
+ && npm install -g minimatch@10.2.1 \
+ && npm cache clean --force
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates openssl \
+ && apt-get upgrade -y \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/api-service
+# Copy package.json and install only production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --only=production --ignore-scripts && npm cache clean --force
+# Copy built application from build stage
+COPY --from=builder /opt/api-service/dist ./dist
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/app.js"]
