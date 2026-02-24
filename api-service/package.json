@@ -34,7 +34,7 @@
     "@opentelemetry/sdk-trace-node": "^1.28.0",
     "@opentelemetry/semantic-conventions": "^1.28.0",
     "@project-sunbird/logger": "^0.0.9",
-    "ajv": "^8.11.2",
+    "ajv": "^8.18.0",
     "ajv-formats": "^2.1.1",
     "aws-sdk": "^2.1348.0",
     "axios": "^1.7.4",
@@ -75,7 +75,9 @@
     "axios": "^1.7.4",
     "tar": "^7.5.8",
     "formidable": "^3.5.3",
-    "eslint": "^9.26.0"
+    "eslint": "^9.26.0",
+    "fast-xml-parser": "^5.3.7",
+    "qs": "^6.15.0"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.4",
