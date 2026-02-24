@@ -12,12 +12,12 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt/api-service
 # Install all dependencies for building
-COPY package.json package-lock.json ./
+COPY api-service/package.json api-service/package-lock.json ./
 RUN npm ci --ignore-scripts && npm cache clean --force
 # Copy source code and build
-COPY tsconfig.json ./
-COPY src/ ./src/
-COPY @types/ ./@types/
+COPY api-service/tsconfig.json ./
+COPY api-service/src/ ./src/
+COPY api-service/@types/ ./@types/
 RUN npm run build
 
 # Production stage
@@ -34,7 +34,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt/api-service
 # Copy package.json and install only production dependencies
-COPY package.json package-lock.json ./
+COPY api-service/package.json api-service/package-lock.json ./
 RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 # Copy built application from build stage
 COPY --from=builder /opt/api-service/dist ./dist
