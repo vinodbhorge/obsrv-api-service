@@ -74,7 +74,8 @@
     "minimatch": "^10.2.1",
     "axios": "^1.7.4",
     "tar": "^7.5.8",
-    "formidable": "^3.5.3"
+    "formidable": "^3.5.3",
+    "eslint": "^9.26.0"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.4",
@@ -96,8 +97,9 @@
     "@types/sinon": "^17.0.3",
     "@types/slug": "^5.0.8",
     "@types/uuid": "^9.0.1",
-    "@typescript-eslint/eslint-plugin": "^7.1.1",
-    "@typescript-eslint/parser": "^7.1.1",
+    "@eslint/js": "^9.26.0",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.3.0",
