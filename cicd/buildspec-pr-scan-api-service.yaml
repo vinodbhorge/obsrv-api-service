@@ -32,7 +32,7 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 24
     commands:
       - FullRepository_name=$(echo $CODEBUILD_SOURCE_REPO_URL | sed 's|https://github.com/||' | sed 's|.git$||')
       - export FullRepository_name
@@ -127,6 +127,8 @@ phases:
         fi
   pre_build:
     commands:
+      - ls -la
+      - pwd
       - cd api-service && npm ci
       - PR_NUMBER=$(echo $CODEBUILD_SOURCE_VERSION | sed 's/pr\///')
       - |
