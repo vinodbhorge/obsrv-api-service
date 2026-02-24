@@ -1,5 +1,5 @@
 # ---- Stage 1: Rebuild Go binaries with Go 1.25.7 to fix crypto/tls CVE ----
-FROM --platform=linux/amd64 golang:1.25.7-bookworm AS go-builder
+FROM --platform=linux/amd64 public.ecr.aws/docker/library/golang:1.25.7-bookworm AS go-builder
 
 # Rebuild kubectl v1.35.1 from source with patched Go toolchain
 WORKDIR /build/kubernetes
