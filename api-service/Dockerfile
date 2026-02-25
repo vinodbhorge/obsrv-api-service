@@ -5,8 +5,11 @@ RUN npm install -g npm@11.10.1 \
  && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
  && rm tar-7.5.8.tgz \
  && npm install -g minimatch@10.2.2 \
- && cd /usr/local/lib/node_modules/npm && npm install minimatch@10.2.2 --no-save \
- && npm cache clean --force
+ && npm cache clean --force \
+ && echo "=== Replacing npm internal minimatch ===" \
+ && rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch \
+ && cp -r /usr/local/lib/node_modules/minimatch /usr/local/lib/node_modules/npm/node_modules/ \
+ && echo "=== Minimatch replacement complete ==="
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
  && apt-get upgrade -y \
@@ -28,8 +31,11 @@ RUN npm install -g npm@11.10.1 \
  && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
  && rm tar-7.5.8.tgz \
  && npm install -g minimatch@10.2.2 \
- && cd /usr/local/lib/node_modules/npm && npm install minimatch@10.2.2 --no-save \
- && npm cache clean --force
+ && npm cache clean --force \
+ && echo "=== Replacing npm internal minimatch ===" \
+ && rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch \
+ && cp -r /usr/local/lib/node_modules/minimatch /usr/local/lib/node_modules/npm/node_modules/ \
+ && echo "=== Minimatch replacement complete ==="
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
  && apt-get upgrade -y \
