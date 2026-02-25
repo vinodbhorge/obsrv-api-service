@@ -6,10 +6,8 @@ RUN npm install -g npm@11.10.1 \
  && rm tar-7.5.8.tgz \
  && npm install -g minimatch@10.2.2 \
  && npm cache clean --force \
- && echo "=== Replacing npm internal minimatch ===" \
  && rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch \
- && cp -r /usr/local/lib/node_modules/minimatch /usr/local/lib/node_modules/npm/node_modules/ \
- && echo "=== Minimatch replacement complete ==="
+ && cp -r /usr/local/lib/node_modules/minimatch /usr/local/lib/node_modules/npm/node_modules/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
  && apt-get upgrade -y \
@@ -32,10 +30,8 @@ RUN npm install -g npm@11.10.1 \
  && rm tar-7.5.8.tgz \
  && npm install -g minimatch@10.2.2 \
  && npm cache clean --force \
- && echo "=== Replacing npm internal minimatch ===" \
  && rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch \
- && cp -r /usr/local/lib/node_modules/minimatch /usr/local/lib/node_modules/npm/node_modules/ \
- && echo "=== Minimatch replacement complete ==="
+ && cp -r /usr/local/lib/node_modules/minimatch /usr/local/lib/node_modules/npm/node_modules/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
  && apt-get upgrade -y \
@@ -44,15 +40,6 @@ WORKDIR /opt/api-service
 # Copy package.json and install only production dependencies
 COPY api-service/package.json api-service/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
-# Verify minimatch version and find all instances
-RUN echo "=== Global minimatch check ===" && \
-    npm list -g minimatch 2>/dev/null || echo "No global minimatch found" && \
-    echo "=== NPM's internal minimatch ===" && \
-    npm list -g npm minimatch --depth=2 2>/dev/null || echo "No npm minimatch found" && \
-    echo "=== Local minimatch check ===" && \
-    npm list minimatch 2>/dev/null || echo "No local minimatch" && \
-    echo "=== Verify no 10.1.2 versions ===" && \
-    find /usr /opt -name "*minimatch*" -exec grep -l "10\.1\.2" {} \; 2>/dev/null || echo "No 10.1.2 versions found"
 # Copy built application from build stage
 COPY --from=builder /opt/api-service/dist ./dist
 EXPOSE 3000
