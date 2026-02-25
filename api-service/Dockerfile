@@ -4,7 +4,7 @@ RUN npm install -g npm@11.10.0 \
  && npm pack tar@7.5.8 \
  && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
  && rm tar-7.5.8.tgz \
- && npm install -g minimatch@10.2.1 \
+ && npm install -g minimatch@10.2.2 \
  && npm cache clean --force
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
@@ -13,7 +13,7 @@ RUN apt-get update \
 WORKDIR /opt/api-service
 # Install all dependencies for building
 COPY api-service/package.json api-service/package-lock.json ./
-RUN rm -f package-lock.json && npm install --ignore-scripts && npm cache clean --force
+RUN npm ci --ignore-scripts
 # Copy source code and build
 COPY api-service/tsconfig.json ./
 COPY api-service/src/ ./src/
@@ -26,7 +26,7 @@ RUN npm install -g npm@11.10.0 \
  && npm pack tar@7.5.8 \
  && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
  && rm tar-7.5.8.tgz \
- && npm install -g minimatch@10.2.1 \
+ && npm install -g minimatch@10.2.2 \
  && npm cache clean --force
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates openssl \
@@ -35,7 +35,9 @@ RUN apt-get update \
 WORKDIR /opt/api-service
 # Copy package.json and install only production dependencies
 COPY api-service/package.json api-service/package-lock.json ./
-RUN rm -f package-lock.json && npm install --omit=dev --ignore-scripts && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts
+# Verify minimatch version
+RUN npm list minimatch --depth=0 || echo "minimatch not at top level" && npm why minimatch | head -20
 # Copy built application from build stage
 COPY --from=builder /opt/api-service/dist ./dist
 EXPOSE 3000
