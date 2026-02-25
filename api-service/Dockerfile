@@ -36,8 +36,13 @@ WORKDIR /opt/api-service
 # Copy package.json and install only production dependencies
 COPY api-service/package.json api-service/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
-# Verify minimatch version
-RUN npm list minimatch --depth=0 || echo "minimatch not at top level" && npm why minimatch | head -20
+# Verify minimatch version and find all instances
+RUN echo "=== Global minimatch check ===" && \
+    npm list -g minimatch 2>/dev/null || echo "No global minimatch found" && \
+    echo "=== Local minimatch check ===" && \
+    npm list minimatch 2>/dev/null || echo "No local minimatch" && \
+    echo "=== Find all minimatch files ===" && \
+    find /usr /opt -name "*minimatch*" 2>/dev/null | head -20 || echo "No minimatch files found"
 # Copy built application from build stage
 COPY --from=builder /opt/api-service/dist ./dist
 EXPOSE 3000
