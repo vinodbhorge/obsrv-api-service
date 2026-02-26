@@ -32,7 +32,7 @@ env:
 phases:
   install:
     runtime-versions:
-      java: corretto21
+      nodejs: 24
     commands:
       - FullRepository_name=$(echo $CODEBUILD_SOURCE_REPO_URL | sed 's|https://github.com/||' | sed 's|.git$||')
       - export FullRepository_name
@@ -117,7 +117,7 @@ phases:
         git config --global user.name "flowsource-integration"
         echo "Cloning centralized utility repo..."
         git clone https://x-access-token:${ACCESS_TOKEN}@github.com/Cognizant-SPE/lms-cicd-scripts.git /tmp/lms-cicd-scripts
-      - cd command-service
+      - cd api-service
       - |
         if [ "$RUN_CHECKMARX" = "true" ]
         then
@@ -127,7 +127,7 @@ phases:
         fi
   pre_build:
     commands:
-      - pip install -r requirements.txt
+      - npm install
       - PR_NUMBER=$(echo $CODEBUILD_SOURCE_VERSION | sed 's/pr\///')
       - |
         echo "...........* RUNNING SONAR SCAN *.........."
@@ -151,8 +151,9 @@ phases:
         fi
       - IMAGE_TAG=$PR_NUMBER
       - export IMAGE_TAG
+      - cd ..
       - echo "Building the Docker image...$REPO_NAME:$IMAGE_TAG"
-      - docker build -t $REPO_NAME:$IMAGE_TAG .
+      - docker build -f api-service/Dockerfile -t $REPO_NAME:$IMAGE_TAG .
       - |
         echo "...........* TWISTCLI  SCAN BLOCK  *.........."
         if [ "$RUN_TLCLISCAN" = "true" ]
