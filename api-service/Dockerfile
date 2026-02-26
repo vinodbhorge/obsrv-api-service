@@ -41,6 +41,6 @@ WORKDIR /opt/api-service
 COPY api-service/package.json api-service/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 # Copy built application from build stage
-COPY --from=builder /opt/api-service/dist ./dist
+COPY --from=builder /opt/api-service/dist ./
 EXPOSE 3000
-CMD ["node", "dist/app.js"]
+CMD ["node", "app.js"]
