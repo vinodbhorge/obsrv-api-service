@@ -21,6 +21,8 @@ COPY api-service/tsconfig.json ./
 COPY api-service/src/ ./src/
 COPY api-service/@types/ ./@types/
 RUN npm run build
+# Remove declaration files to avoid module resolution conflicts
+RUN find dist -name "*.d.ts" -delete
 
 # Production stage
 FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.13.1-slim AS production
@@ -42,5 +44,7 @@ COPY api-service/package.json api-service/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 # Copy built application from build stage
 COPY --from=builder /opt/api-service/dist ./
+# Verify the structure and ensure no declaration files
+RUN ls -la && echo "=== Checking for .d.ts files ===" && find . -name "*.d.ts" | head -5 || echo "No .d.ts files found"
 EXPOSE 3000
 CMD ["node", "app.js"]

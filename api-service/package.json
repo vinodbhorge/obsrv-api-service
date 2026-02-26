@@ -2,7 +2,8 @@
   "name": "obsrv-api-service",
   "version": "1.0.0",
   "description": "API service for the obsrv api's",
-  "main": "dist/app.js",
+  "type": "commonjs",
+  "main": "app.js",
   "scripts": {
     "start": "ts-node ./src/app.ts",
     "test": "source .env.test && nyc mocha ./src/tests/**/*.spec.ts --exit",
