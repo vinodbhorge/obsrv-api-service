@@ -1,9 +1,9 @@
 # Build stage
 FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.13.1-slim AS builder
 RUN npm install -g npm@11.10.1 \
- && npm pack tar@7.5.8 \
- && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
- && rm tar-7.5.8.tgz \
+ && npm pack tar@7.5.11 \
+ && tar -xzf tar-7.5.11.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
+ && rm tar-7.5.11.tgz \
  && npm install -g minimatch@10.2.2 \
  && npm cache clean --force \
  && rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch \
@@ -27,9 +27,9 @@ RUN find dist -name "*.d.ts" -delete
 # Production stage
 FROM --platform=linux/amd64 public.ecr.aws/docker/library/node:24.13.1-slim AS production
 RUN npm install -g npm@11.10.1 \
- && npm pack tar@7.5.8 \
- && tar -xzf tar-7.5.8.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
- && rm tar-7.5.8.tgz \
+ && npm pack tar@7.5.11 \
+ && tar -xzf tar-7.5.11.tgz -C /usr/local/lib/node_modules/npm/node_modules/tar --strip-components=1 \
+ && rm tar-7.5.11.tgz \
  && npm install -g minimatch@10.2.2 \
  && npm cache clean --force \
  && rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch \
