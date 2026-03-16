@@ -1,0 +1,166 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_DEFAULT_REGION: "us-east-1"
+    RUN_SONARSCAN: "false"
+    RUN_UNITTESTS: "true"
+    RUN_CHECKMARX: "true"
+    RUN_BLACKDUCK: "true"
+    RUN_TLCLISCAN: "true"
+    CX_TEAM: "Acc-IPReady"
+  secrets-manager:
+    CHECKMARX_SERVER: "lms-scans-secrets:CHECKMARX_SERVER"
+    CHECKMARX_USER: "lms-scans-secrets:CHECKMARX_USER"
+    CHECKMARX_PASSWORD: "lms-scans-secrets:CHECKMARX_PASSWORD"
+    CHECKMARX_CLIENT_ID: "lms-scans-secrets:CHECKMARX_CLIENT_ID"
+    CHECKMARX_CLIENT_SECRET: "lms-scans-secrets:CHECKMARX_CLIENT_SECRET"
+    SONAR_HOST_URL: "lms-scans-secrets:SONAR_HOST_URL"
+    SONAR_TOKEN: "lms-scans-secrets:SONAR_TOKEN"
+    BLACKDUCK_URL: "lms-scans-secrets:BLACKDUCK_URL"
+    BLACKDUCK_TOKEN: "lms-scans-secrets:BLACKDUCK_TOKEN"
+    APP_ID: "lms-scans-secrets:APP_ID"
+    INSTALLATION_ID: "lms-scans-secrets:INSTALLATION_ID"
+    PRIVATE_KEY_BASE64: "lms-scans-secrets:PRIVATE_KEY_BASE64"
+    TWISTCLI_ACCESS_KEY_ID: "lms-scans-secrets:TWISTCLI_ACCESS_KEY_ID"
+    TWISTCLI_ACCESS_SECRET: "lms-scans-secrets:TWISTCLI_ACCESS_SECRET"
+    TWISTCLI_URL_AUTH: "lms-scans-secrets:TWISTCLI_URL_AUTH"
+    PRISMA_CONSOLE: "lms-scans-secrets:PRISMA_CONSOLE"
+    TWISTCLI_PATH_LIN_X86: "lms-scans-secrets:TWISTCLI_PATH_LIN_X86"
+    TWISTCLI_PATH_LIN_ARM: "lms-scans-secrets:TWISTCLI_PATH_LIN_ARM"
+    TWISTCLI_PATH_WIN: "lms-scans-secrets:TWISTCLI_PATH_WIN"
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+    commands:
+      - FullRepository_name=$(echo $CODEBUILD_SOURCE_REPO_URL | sed 's|https://github.com/||' | sed 's|.git$||')
+      - export FullRepository_name
+      - REPO_NAME=$(basename "$FullRepository_name")"-command-service"
+      - export REPO_NAME
+      - export SONAR_PROJECT="$REPO_NAME"
+      # GitHub App authentication using Python
+      - echo "$PRIVATE_KEY_BASE64" | base64 -d > /tmp/gh_key.pem
+      - pip install pyjwt cryptography requests
+      - |
+        python3 << 'EOF' > /tmp/token_output.txt
+        import jwt
+        import time
+        import requests
+        import os
+        import sys
+
+        try:
+            # Read private key
+            with open('/tmp/gh_key.pem', 'r') as f:
+                private_key = f.read()
+            
+            # Get environment variables
+            app_id = os.getenv('APP_ID')
+            installation_id = os.getenv('INSTALLATION_ID')
+            
+            if not app_id or not installation_id:
+                print("ERROR: Missing APP_ID or INSTALLATION_ID")
+                sys.exit(1)
+            
+            # Create JWT
+            now = int(time.time())
+            payload = {
+                'iat': now,
+                'exp': now + 600,
+                'iss': app_id
+            }
+            
+            token = jwt.encode(payload, private_key, algorithm='RS256')
+            
+            # Make API request
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'Accept': 'application/vnd.github+json'
+            }
+            
+            url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
+            response = requests.post(url, headers=headers)
+            
+            if response.status_code == 201:
+                access_token = response.json().get('token', '')
+                print(f"TOKEN:{access_token}")
+            else:
+                print(f"ERROR: {response.status_code} - {response.text}")
+                sys.exit(1)
+                
+        except Exception as e:
+            print(f"ERROR: {str(e)}")
+            sys.exit(1)
+        EOF
+      - cat /tmp/token_output.txt
+      - |
+        # Extract and validate token
+        if grep -q "ERROR:" /tmp/token_output.txt; then
+          echo "Failed to get access token:"
+          cat /tmp/token_output.txt
+          exit 1
+        fi
+        
+        ACCESS_TOKEN=$(grep "TOKEN:" /tmp/token_output.txt | cut -d':' -f2)
+        
+        if [[ -z "$ACCESS_TOKEN" ]]; then
+          echo "ERROR: Failed to extract access token"
+          cat /tmp/token_output.txt
+          exit 1
+        fi
+        
+        echo "Access token generated successfully (length: ${#ACCESS_TOKEN})"
+        export ACCESS_TOKEN
+      
+        git config --global user.email "noreply@github.com"
+        git config --global user.name "flowsource-integration"
+        echo "Cloning centralized utility repo..."
+        git clone https://x-access-token:${ACCESS_TOKEN}@github.com/Cognizant-SPE/lms-cicd-scripts.git /tmp/lms-cicd-scripts
+      - cd command-service
+      - |
+        if [ "$RUN_CHECKMARX" = "true" ]
+        then
+          bash /tmp/lms-cicd-scripts/utility/script/checkmarx-scan.sh
+        else
+          echo "...........* SKIPPING CHECKMARX SCAN *............"
+        fi
+  pre_build:
+    commands:
+      - pip install -r requirements.txt
+      - PR_NUMBER=$(echo $CODEBUILD_SOURCE_VERSION | sed 's/pr\///')
+      - |
+        echo "...........* RUNNING SONAR SCAN *.........."
+        if [ "$RUN_SONARSCAN" = "true" ]
+        then
+          bash /tmp/lms-cicd-scripts/utility/script/sonar_scan_result.sh
+          echo "...........* SONAR SCAN COMPLETED SUCCESSFULLY *.........."
+        else
+          echo "...........* SKIPPING SONAR SCAN *.........."
+        fi
+  build:
+    commands:
+      - |
+        if [ "$RUN_BLACKDUCK" = "true" ]
+        then
+          RELEASE_NAME="PR"
+          export RELEASE_NAME
+          bash /tmp/lms-cicd-scripts/utility/script/blackduck-scan.sh
+        else
+          echo "...........* SKIPPING BLACKDUCK SCAN *..........."
+        fi
+      - IMAGE_TAG=$PR_NUMBER
+      - export IMAGE_TAG
+      - echo "Building the Docker image...$REPO_NAME:$IMAGE_TAG"
+      - docker build -t $REPO_NAME:$IMAGE_TAG .
+      - |
+        echo "...........* TWISTCLI  SCAN BLOCK  *.........."
+        if [ "$RUN_TLCLISCAN" = "true" ]
+        then
+          bash /tmp/lms-cicd-scripts/utility/script/twistcli-scan.sh
+        else
+          echo "...........* SKIPPING TWISTCLI SCAN *.........."
+        fi
+  post_build:
+    commands:
+      - bash /tmp/lms-cicd-scripts/utility/script/pr-scans-results-comment.sh
