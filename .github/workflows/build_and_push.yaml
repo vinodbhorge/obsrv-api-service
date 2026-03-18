@@ -26,6 +26,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Generate image tag 
@@ -46,7 +47,7 @@ jobs:
           file: ./api-service/Dockerfile
           push: true
           tags: |
-            061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
+            ${{ steps.login-ecr.outputs.registry }}/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Create Git tag
         run: |
@@ -68,6 +69,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Generate image tag
@@ -87,7 +89,7 @@ jobs:
           context: ./command-service
           push: true
           tags: |
-            061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
+            ${{ steps.login-ecr.outputs.registry }}/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Create Git tag
         run: |
@@ -109,6 +111,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Generate image tag
@@ -128,7 +131,7 @@ jobs:
           context: ./system-rules-ingestor
           push: true
           tags: |
-            061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
+            ${{ steps.login-ecr.outputs.registry }}/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Create Git tag
         run: |
