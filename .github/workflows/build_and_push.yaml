@@ -111,7 +111,7 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Generate image tag
+      - name: Generate the image tag
         id: image-tag
         run: |
           DATE_TAG=$(date +%d%m%y)
