@@ -111,7 +111,7 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Generate image tag
+      - name: Generate the image tag
         id: image-tag
         run: |
           DATE_TAG=$(date +%d%m%y)
@@ -130,10 +130,9 @@ jobs:
           tags: |
             061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
-      - name: Create Git tag
+      - name: Create the Git tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.image-tag.outputs.IMAGE_TAG }}" -m "Release ${{ steps.image-tag.outputs.IMAGE_TAG }}"
           git push origin "${{ steps.image-tag.outputs.IMAGE_TAG }}"
-
