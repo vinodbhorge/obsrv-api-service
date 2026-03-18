@@ -26,7 +26,6 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Generate image tag 
@@ -47,7 +46,7 @@ jobs:
           file: ./api-service/Dockerfile
           push: true
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
+            061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Create Git tag
         run: |
@@ -69,7 +68,6 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Generate image tag
@@ -89,7 +87,7 @@ jobs:
           context: ./command-service
           push: true
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
+            061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Create Git tag
         run: |
@@ -111,7 +109,6 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Generate image tag
@@ -131,12 +128,11 @@ jobs:
           context: ./system-rules-ingestor
           push: true
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
+            061051225269.dkr.ecr.us-east-1.amazonaws.com/lms_sb_obsrv_api_service:${{ steps.image-tag.outputs.IMAGE_TAG }}
 
-      - name: Create Git tag
+      - name: Create the Git tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.image-tag.outputs.IMAGE_TAG }}" -m "Release ${{ steps.image-tag.outputs.IMAGE_TAG }}"
           git push origin "${{ steps.image-tag.outputs.IMAGE_TAG }}"
-
