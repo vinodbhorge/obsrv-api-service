@@ -36,7 +36,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build docker image and push
         uses: docker/build-push-action@v5
         with:
@@ -52,7 +52,7 @@ jobs:
     environment: aws-dev
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Terragrunt
         uses: autero1/action-terragrunt@v1.1.0
         with:
@@ -60,7 +60,7 @@ jobs:
       - name: Terragrunt installation
         run: terragrunt --version
       - name: Clone the terraform deployment repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ vars.DEPLOY_REPO }}
           path: deploy
@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone the terraform deployment repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ vars.DEPLOY_REPO }}
           path: deploy
