@@ -1,4 +1,4 @@
-fastapi==0.103.0
+fastapi==0.135.3
 uvicorn==0.20.0
 dataclasses-json==0.5.7
 # pydantic==1.10.5
